@@ -1,4 +1,4 @@
-./samples/
-./imgs/
-./output/
-./runtime
+/samples
+/imgs
+/output
+/runtime
