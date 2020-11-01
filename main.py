@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import random
+import timeit
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -25,6 +26,7 @@ if __name__=="__main__":
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
     parser.add_argument('--batchSize', type=int, default=64, help='input batch size')
     parser.add_argument('--imageSize', type=int, default=64, help='the height / width of the input image to network')
+    parser.add_argument('--samples', type=int, default=100 )
     parser.add_argument('--nc', type=int, default=3, help='input image channels')
     parser.add_argument('--nz', type=int, default=100, help='size of the latent z vector')
     parser.add_argument('--ngf', type=int, default=64)
@@ -59,6 +61,7 @@ if __name__=="__main__":
     torch.manual_seed(opt.manualSeed)
 
     cudnn.benchmark = True
+    start = timeit.timeit()
 
     if torch.cuda.is_available() and not opt.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
@@ -230,7 +233,7 @@ if __name__=="__main__":
             print('[%d/%d][%d/%d][%d] Loss_D: %f Loss_G: %f Loss_D_real: %f Loss_D_fake %f'
                 % (epoch, opt.niter, i, len(dataloader), gen_iterations,
                 errD.data[0], errG.data[0], errD_real.data[0], errD_fake.data[0]))
-            if gen_iterations % 500 == 0:
+            if gen_iterations % opt.samples == 0:
                 real_cpu = real_cpu.mul(0.5).add(0.5)
                 vutils.save_image(real_cpu, '{0}/real_samples.png'.format(opt.experiment))
                 fake = netG(Variable(fixed_noise, volatile=True))
@@ -240,3 +243,9 @@ if __name__=="__main__":
         # do checkpointing
         torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
         torch.save(netD.state_dict(), '{0}/netD_epoch_{1}.pth'.format(opt.experiment, epoch))
+    end = timeit.timeit()
+    f = open("runtime", "w", newline='')
+    f.write(f"Tiempo inicial: {str(start)}\n")
+    f.write(f"Tiempo final: {str(end)}\n")
+    f.write(f"Tiempo de ejecucion: {str(end-start)}\n")
+    f.close()
